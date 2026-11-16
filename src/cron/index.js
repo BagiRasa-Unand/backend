@@ -120,3 +120,4 @@ function initCronJobs() {
 module.exports = {
   initCronJobs,
 };
+

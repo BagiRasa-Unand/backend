@@ -119,3 +119,4 @@ INSERT INTO donation_photos (donation_id, photo_url, is_primary) VALUES
 ('c0000000-0000-0000-0000-000000000001', '/uploads/donations/sample_nasi_ayam.jpg', true),
 ('c0000000-0000-0000-0000-000000000002', '/uploads/donations/sample_roti.jpg', true)
 ON CONFLICT DO NOTHING;
+

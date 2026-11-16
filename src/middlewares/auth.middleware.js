@@ -69,3 +69,4 @@ module.exports = {
   requireRole,
   optionalToken,
 };
+

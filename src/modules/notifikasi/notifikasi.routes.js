@@ -12,3 +12,4 @@ router.get('/', verifyToken, notifikasiController.getNotifications);
 router.patch('/:id/read', verifyToken, notifikasiController.markAsRead);
 
 module.exports = router;
+

@@ -32,3 +32,4 @@ module.exports = {
   sendSuccess,
   sendError,
 };
+

@@ -19,3 +19,4 @@ router.put('/pickup-points/:id', verifyToken, requireRole('DONATUR', 'ADMIN', 'R
 router.delete('/pickup-points/:id', verifyToken, requireRole('DONATUR', 'ADMIN'), lokasiController.delete);
 
 module.exports = router;
+

@@ -25,3 +25,4 @@ module.exports = {
     serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || null,
   },
 };
+

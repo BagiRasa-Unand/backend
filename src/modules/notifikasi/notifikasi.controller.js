@@ -33,3 +33,4 @@ class NotifikasiController {
 }
 
 module.exports = new NotifikasiController();
+

@@ -19,3 +19,4 @@ router.get('/incoming', verifyToken, requireRole('DONATUR', 'ADMIN'), klaimContr
 router.post('/verify', verifyToken, requireRole('DONATUR', 'RELAWAN', 'ADMIN'), klaimController.verifyPickup);
 
 module.exports = router;
+

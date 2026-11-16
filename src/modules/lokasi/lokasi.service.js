@@ -193,3 +193,4 @@ class LokasiService {
 }
 
 module.exports = new LokasiService();
+

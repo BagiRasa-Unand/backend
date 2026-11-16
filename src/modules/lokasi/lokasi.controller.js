@@ -117,3 +117,4 @@ class LokasiController {
 }
 
 module.exports = new LokasiController();
+

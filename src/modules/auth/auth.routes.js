@@ -18,3 +18,4 @@ router.post('/device-token', verifyToken, authController.registerDeviceToken);
 router.get('/me', verifyToken, authController.getProfile);
 
 module.exports = router;
+

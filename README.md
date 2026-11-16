@@ -182,3 +182,4 @@ Semua respons menggunakan format standar JSON:
    - Larisa: `feature/backend-modul-b-klaim`
 2. Jangan mengedit file milik modul lain tanpa koordinasi.
 3. Selalu uji endpoint menggunakan Postman / HTTP client sebelum membuat Pull Request ke `master`.
+
