@@ -1,0 +1,38 @@
+{
+  "name": "bagirasa-backend",
+  "version": "1.1.0",
+  "description": "BagiRasa Backend REST API Service - Food Rescue Platform",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "node src/database/migrate.js",
+    "migrate:seed": "node src/database/migrate.js --seed"
+  },
+  "keywords": [
+    "bagirasa",
+    "food-rescue",
+    "express",
+    "postgresql",
+    "postgis",
+    "rest-api"
+  ],
+  "author": "Kelompok 2 Kelas B (Dimas, Trilen, Larisa)",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "firebase-admin": "^12.7.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
