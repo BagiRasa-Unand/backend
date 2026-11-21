@@ -5,6 +5,17 @@ function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Fallback otomatis saat mode development agar frontend dapat langsung testing
+    if (process.env.NODE_ENV === 'development') {
+      req.user = {
+        id: 'a0000000-0000-0000-0000-000000000001',
+        email: 'donor@bagirasa.com',
+        role: 'DONATUR',
+        fullName: 'Warung Bu Siti (Dev Mode)',
+      };
+      return next();
+    }
+
     return sendError(res, {
       statusCode: 401,
       message: 'Akses ditolak. Token otorisasi tidak ditemukan.',
@@ -69,4 +80,3 @@ module.exports = {
   requireRole,
   optionalToken,
 };
-

@@ -7,12 +7,13 @@ class LokasiService {
         p.id,
         p.name,
         p.address,
-        p.latitude,
-        p.longitude,
+        p.latitude::float AS latitude,
+        p.longitude::float AS longitude,
         p.open_hour AS "openTime",
         p.close_hour AS "closeTime",
         p.pic_name AS "picName",
         p.pic_phone AS "picPhone",
+        p.pic_name AS "note",
         p.is_active AS "isActive",
         COUNT(d.id) FILTER (WHERE d.status = 'TERSEDIA' AND d.expires_at > NOW())::int AS "activeListingCount",
         p.created_at
@@ -48,12 +49,13 @@ class LokasiService {
         p.id,
         p.name,
         p.address,
-        p.latitude,
-        p.longitude,
+        p.latitude::float AS latitude,
+        p.longitude::float AS longitude,
         p.open_hour AS "openTime",
         p.close_hour AS "closeTime",
         p.pic_name AS "picName",
         p.pic_phone AS "picPhone",
+        p.pic_name AS "note",
         p.is_active AS "isActive",
         ROUND(ST_Distance(
           p.location::geography, 
@@ -82,12 +84,13 @@ class LokasiService {
         p.id,
         p.name,
         p.address,
-        p.latitude,
-        p.longitude,
+        p.latitude::float AS latitude,
+        p.longitude::float AS longitude,
         p.open_hour AS "openTime",
         p.close_hour AS "closeTime",
         p.pic_name AS "picName",
         p.pic_phone AS "picPhone",
+        p.pic_name AS "note",
         p.is_active AS "isActive",
         COUNT(d.id) FILTER (WHERE d.status = 'TERSEDIA' AND d.expires_at > NOW())::int AS "activeListingCount",
         p.created_at,
@@ -108,7 +111,7 @@ class LokasiService {
     return result.rows[0];
   }
 
-  async createPickupPoint({ name, address, latitude, longitude, openHour = '08:00', closeHour = '20:00', picName, picPhone }) {
+  async createPickupPoint({ name, address, latitude, longitude, openHour, openTime, closeHour, closeTime, picName, picPhone, note }) {
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
 
@@ -118,25 +121,39 @@ class LokasiService {
       throw error;
     }
 
+    const open = openTime || openHour || '08:00';
+    const close = closeTime || closeHour || '20:00';
+    const pic = picName || note || '';
+
     const sql = `
       INSERT INTO pickup_points (
         name, address, location, latitude, longitude, open_hour, close_hour, pic_name, pic_phone
       ) VALUES (
         $1, $2, ST_SetSRID(ST_MakePoint($3, $4), 4326), $4, $3, $5, $6, $7, $8
       )
-      RETURNING id, name, address, latitude, longitude, open_hour AS "openTime", close_hour AS "closeTime", pic_name AS "picName", pic_phone AS "picPhone", is_active AS "isActive", created_at
+      RETURNING id, name, address, latitude::float AS latitude, longitude::float AS longitude, open_hour AS "openTime", close_hour AS "closeTime", pic_name AS "picName", pic_phone AS "picPhone", pic_name AS "note", is_active AS "isActive", 0 AS "activeListingCount", created_at
     `;
 
-    const result = await db.query(sql, [name, address, lng, lat, openHour, closeHour, picName, picPhone]);
+    const result = await db.query(sql, [name, address, lng, lat, open, close, pic, picPhone || '']);
     return result.rows[0];
   }
 
-  async updatePickupPoint(id, { name, address, latitude, longitude, openHour, closeHour, picName, picPhone, isActive }) {
+  async updatePickupPoint(id, { name, address, latitude, longitude, openHour, openTime, closeHour, closeTime, picName, picPhone, note, isActive, status }) {
     const current = await this.getPickupPointById(id);
 
     const lat = latitude !== undefined ? parseFloat(latitude) : current.latitude;
     const lng = longitude !== undefined ? parseFloat(longitude) : current.longitude;
-    const active = isActive !== undefined ? isActive : current.isActive;
+    
+    let active = current.isActive;
+    if (isActive !== undefined) {
+      active = isActive === true || isActive === 'true';
+    } else if (status !== undefined) {
+      active = status === 'aktif' || status === 'PickupPointStatus.aktif';
+    }
+
+    const open = openTime || openHour || current.openTime;
+    const close = closeTime || closeHour || current.closeTime;
+    const pic = picName || note || current.picName;
 
     const sql = `
       UPDATE pickup_points
@@ -153,10 +170,10 @@ class LokasiService {
         is_active = $9,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $10
-      RETURNING id, name, address, latitude, longitude, open_hour AS "openTime", close_hour AS "closeTime", pic_name AS "picName", pic_phone AS "picPhone", is_active AS "isActive", updated_at
+      RETURNING id, name, address, latitude::float AS latitude, longitude::float AS longitude, open_hour AS "openTime", close_hour AS "closeTime", pic_name AS "picName", pic_phone AS "picPhone", pic_name AS "note", is_active AS "isActive", updated_at
     `;
 
-    const result = await db.query(sql, [name, address, lng, lat, openHour, closeHour, picName, picPhone, active, id]);
+    const result = await db.query(sql, [name, address, lng, lat, open, close, pic, picPhone, active, id]);
     return result.rows[0];
   }
 
@@ -193,4 +210,3 @@ class LokasiService {
 }
 
 module.exports = new LokasiService();
-
