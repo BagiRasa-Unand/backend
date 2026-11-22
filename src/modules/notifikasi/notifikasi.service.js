@@ -67,6 +67,15 @@ class NotifikasiService {
     if (status === 'MENUNGGU_PENGAMBILAN') {
       title = '🎉 Klaim Disetujui!';
       body = `Klaim Anda telah disetujui. Tunjukkan kode ${claimCode} saat pengambilan makanan.`;
+    } else if (status === 'PROMOTED') {
+      title = '🎉 Klaimmu Maju dari Antrean!';
+      body = `Kuota makanan kini tersedia untuk Anda! Ambil sebelum batas waktu berakhir (Kode: ${claimCode}).`;
+    } else if (status === 'ANTRE') {
+      title = '⏳ Masuk Antrean Klaim (FIFO)';
+      body = 'Permintaan Anda masuk antrean karena stok porsi sedang dipesan pengguna lain.';
+    } else if (status === 'DITOLAK') {
+      title = '❌ Klaim Ditolak Pendonor';
+      body = notes ? `Klaim ditolak: ${notes}` : 'Mohon maaf, permintaan klaim Anda ditolak oleh pendonor.';
     } else if (status === 'SELESAI') {
       title = '✅ Penyerahan Selesai';
       body = 'Terima kasih telah menyelamatkan makanan hari ini bersama BagiRasa!';

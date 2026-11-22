@@ -5,7 +5,36 @@
 
 -- 1. Ekstensi Wajib
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "postgis";
+
+-- PostGIS (dengan fallback jika ekstensi belum diinstall pada server lokal)
+DO $$ BEGIN
+    CREATE EXTENSION IF NOT EXISTS "postgis";
+EXCEPTION
+    WHEN undefined_file THEN
+        RAISE NOTICE 'Ekstensi postgis tidak tersedia. Menggunakan domain fallback geometry...';
+    WHEN feature_not_supported THEN
+        RAISE NOTICE 'Ekstensi postgis tidak didukung. Menggunakan domain fallback geometry...';
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Gagal memuat postgis: %', SQLERRM;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'geometry') THEN
+        CREATE DOMAIN geometry AS text;
+    END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION ST_MakePoint(x double precision, y double precision) RETURNS text AS $$
+BEGIN
+    RETURN 'POINT(' || x || ' ' || y || ')';
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION ST_SetSRID(geom anyelement, srid integer) RETURNS anyelement AS $$
+BEGIN
+    RETURN geom;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 -- 2. Tipe Enum
 DO $$ BEGIN
@@ -21,9 +50,20 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE claim_status_enum AS ENUM ('MENUNGGU_PENGAMBILAN', 'SELESAI', 'BATAL_KEDALUWARSA', 'DIBATALKAN_PENGGUNA');
+    CREATE TYPE claim_status_enum AS ENUM (
+        'MENUNGGU_PERSETUJUAN',
+        'ANTRE',
+        'MENUNGGU_PENGAMBILAN', 
+        'SELESAI', 
+        'DITOLAK',
+        'BATAL_KEDALUWARSA', 
+        'DIBATALKAN_PENGGUNA'
+    );
 EXCEPTION
-    WHEN duplicate_object THEN null;
+    WHEN duplicate_object THEN
+        BEGIN ALTER TYPE claim_status_enum ADD VALUE IF NOT EXISTS 'MENUNGGU_PERSETUJUAN'; EXCEPTION WHEN OTHERS THEN null; END;
+        BEGIN ALTER TYPE claim_status_enum ADD VALUE IF NOT EXISTS 'ANTRE'; EXCEPTION WHEN OTHERS THEN null; END;
+        BEGIN ALTER TYPE claim_status_enum ADD VALUE IF NOT EXISTS 'DITOLAK'; EXCEPTION WHEN OTHERS THEN null; END;
 END $$;
 
 -- 3. Tabel Users
@@ -56,7 +96,7 @@ CREATE TABLE IF NOT EXISTS pickup_points (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(150) NOT NULL,
     address TEXT NOT NULL,
-    location GEOMETRY(Point, 4326) NOT NULL, -- Format WGS84
+    location GEOMETRY NOT NULL, -- Format WGS84 Point
     latitude DECIMAL(10, 8) NOT NULL,
     longitude DECIMAL(11, 8) NOT NULL,
     open_hour VARCHAR(10) NOT NULL DEFAULT '08:00',
@@ -68,8 +108,14 @@ CREATE TABLE IF NOT EXISTS pickup_points (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index Spasial GIST untuk pencarian radius cepat
-CREATE INDEX IF NOT EXISTS idx_pickup_points_location ON pickup_points USING GIST(location);
+-- Index Spasial GIST untuk pencarian radius cepat (aktif jika PostGIS terpasang)
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') THEN
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_pickup_points_location ON pickup_points USING GIST(location)';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN null;
+END $$;
 
 -- 6. Tabel Kategori Makanan
 CREATE TABLE IF NOT EXISTS categories (
@@ -124,15 +170,27 @@ CREATE TABLE IF NOT EXISTS claims (
     claim_code VARCHAR(12) UNIQUE NOT NULL, -- Kode unik misal: BGR-7X9A
     qr_payload TEXT NOT NULL,
     status claim_status_enum NOT NULL DEFAULT 'MENUNGGU_PENGAMBILAN',
+    queue_order INT DEFAULT 0,
+    reject_reason TEXT,
+    decided_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL, -- Batas waktu ambil
     claimed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP WITH TIME ZONE
 );
 
+DO $$ BEGIN
+    ALTER TABLE claims ADD COLUMN IF NOT EXISTS queue_order INT DEFAULT 0;
+    ALTER TABLE claims ADD COLUMN IF NOT EXISTS reject_reason TEXT;
+    ALTER TABLE claims ADD COLUMN IF NOT EXISTS decided_at TIMESTAMP WITH TIME ZONE;
+EXCEPTION
+    WHEN OTHERS THEN null;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_claims_donation ON claims(donation_id);
 CREATE INDEX IF NOT EXISTS idx_claims_recipient ON claims(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_claims_code ON claims(claim_code);
 CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
+CREATE INDEX IF NOT EXISTS idx_claims_queue ON claims(donation_id, status, queue_order);
 
 -- 10. Tabel Log Riwayat Perubahan Status Klaim
 CREATE TABLE IF NOT EXISTS claim_logs (

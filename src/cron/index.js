@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const db = require('../config/database');
 const notifikasiService = require('../modules/notifikasi/notifikasi.service');
+const klaimService = require('../modules/klaim/klaim.service');
 
 function initCronJobs() {
   console.log('⏰ Inisialisasi background cron scheduler...');
@@ -51,6 +52,9 @@ function initCronJobs() {
           status: 'BATAL_KEDALUWARSA',
           claimCode: claim.claim_code,
         }).catch((e) => console.warn(e.message));
+
+        // Auto-promotion FIFO jika ada antrean yang menunggu
+        await klaimService.promoteNextInQueue(client, claim.donation_id);
       }
 
       await client.query('COMMIT');
