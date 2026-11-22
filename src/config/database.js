@@ -24,13 +24,8 @@ async function getClient() {
 
 async function testConnection() {
   try {
-    const res = await pool.query('SELECT NOW() as current_time');
-    try {
-      const postgisRes = await pool.query('SELECT PostGIS_Version() as postgis_version');
-      console.log(`✅ Database terhubung! PostGIS Version: ${postgisRes.rows[0].postgis_version}`);
-    } catch {
-      console.log('✅ Database PostgreSQL terhubung! (Mode fallback koordinat numerik GPS)');
-    }
+    const res = await pool.query('SELECT NOW() as current_time, PostGIS_Version() as postgis_version');
+    console.log(`✅ Database terhubung! PostGIS Version: ${res.rows[0].postgis_version}`);
     return true;
   } catch (error) {
     console.error('❌ Gagal terhubung ke PostgreSQL:', error.message);
