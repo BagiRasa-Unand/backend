@@ -151,6 +151,13 @@ class DonasiService {
         d.expires_at AS "expiresAt",
         d.created_at AS "createdAt",
         (
+          SELECT photo_url 
+          FROM donation_photos 
+          WHERE donation_id = d.id 
+          ORDER BY is_primary DESC, created_at ASC 
+          LIMIT 1
+        ) AS "photoPath",
+        (
           SELECT json_agg(json_build_object('id', dp.id, 'photoUrl', dp.photo_url, 'isPrimary', dp.is_primary))
           FROM donation_photos dp
           WHERE dp.donation_id = d.id
