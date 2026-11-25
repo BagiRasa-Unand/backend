@@ -14,7 +14,12 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
+    let ext = path.extname(file.originalname || '').toLowerCase();
+    if (!ext || ext === '') {
+      if (file.mimetype === 'image/png') ext = '.png';
+      else if (file.mimetype === 'image/webp') ext = '.webp';
+      else ext = '.jpg';
+    }
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, `donation-${uniqueSuffix}${ext}`);
   },
@@ -22,10 +27,20 @@ const storage = multer.diskStorage({
 
 function fileFilter(req, file, cb) {
   const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif'];
+
+  if (
+    allowedMimeTypes.includes(file.mimetype) ||
+    (file.mimetype && file.mimetype.startsWith('image/')) ||
+    allowedExtensions.includes(ext) ||
+    file.mimetype === 'application/octet-stream'
+  ) {
     cb(null, true);
   } else {
-    cb(new Error('Format file tidak didukung! Hanya file gambar (JPG, PNG, WEBP) yang diizinkan.'), false);
+    const err = new Error('Format file tidak didukung! Hanya file gambar (JPG, PNG, WEBP) yang diizinkan.');
+    err.statusCode = 400;
+    cb(err, false);
   }
 }
 
@@ -33,7 +48,7 @@ const uploadDonationPhotos = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // Maksimal 5 MB per foto
+    fileSize: 10 * 1024 * 1024, // Maksimal 10 MB per foto
     files: 5, // Maksimal 5 foto per listing donasi
   },
 });

@@ -11,16 +11,16 @@ class DonasiService {
     pickupPointId,
     isHalal,
     isUrgent,
-    status = 'TERSEDIA',
+    status,
     search,
     page = 1,
-    limit = 10,
+    limit = 20,
   } = {}) {
     const offset = (page - 1) * limit;
     const conditions = [];
     const params = [];
 
-    if (status) {
+    if (status && status !== 'all' && status !== '*') {
       params.push(status);
       conditions.push(`d.status = $${params.length}`);
     }

@@ -71,6 +71,84 @@ INSERT INTO pickup_points (id, name, address, location, latitude, longitude, ope
     'Ibu Ani Kantin',
     '081255556666',
     true
+),
+(
+    'b0000000-0000-0000-0000-000000000004',
+    'Kantin Teknik Sisfo',
+    'Gedung Teknik Informasi, Lt. 1, Kampus Unand',
+    ST_SetSRID(ST_MakePoint(100.458700, -0.913300), 4326),
+    -0.91330000,
+    100.45870000,
+    '08:00',
+    '16:00',
+    'PIC Sisfo',
+    '081266667777',
+    true
+),
+(
+    'b0000000-0000-0000-0000-000000000005',
+    'Kantin Rektorat',
+    'Gedung Rektorat, Lantai Dasar, Kampus Unand',
+    ST_SetSRID(ST_MakePoint(100.460200, -0.913500), 4326),
+    -0.91350000,
+    100.46020000,
+    '07:30',
+    '17:00',
+    'PIC Rektorat',
+    '081277778888',
+    true
+),
+(
+    'b0000000-0000-0000-0000-000000000006',
+    'Kantin Asrama Putra',
+    'Gedung Asrama Putra Blok A, Kampus Unand',
+    ST_SetSRID(ST_MakePoint(100.457800, -0.914800), 4326),
+    -0.91480000,
+    100.45780000,
+    '07:00',
+    '15:00',
+    'PIC Asrama',
+    '081288889999',
+    true
+),
+(
+    'b0000000-0000-0000-0000-000000000007',
+    'Kantin FEB Corner',
+    'Gedung Fakultas Ekonomi Bisnis, Selasar Timur',
+    ST_SetSRID(ST_MakePoint(100.457500, -0.912000), 4326),
+    -0.91200000,
+    100.45750000,
+    '09:00',
+    '17:00',
+    'PIC FEB',
+    '081299990000',
+    true
+),
+(
+    'b0000000-0000-0000-0000-000000000008',
+    'Kantin Faperta Barat',
+    'Gedung Pertanian, Pintu Barat, Kampus Unand',
+    ST_SetSRID(ST_MakePoint(100.460800, -0.915500), 4326),
+    -0.91550000,
+    100.46080000,
+    '08:00',
+    '15:00',
+    'PIC Faperta',
+    '081200001111',
+    true
+),
+(
+    'b0000000-0000-0000-0000-000000000009',
+    'Stand BEM Pusat',
+    'Gedung PKM, Halaman Utama, Kampus Unand',
+    ST_SetSRID(ST_MakePoint(100.461000, -0.913000), 4326),
+    -0.91300000,
+    100.46100000,
+    '09:00',
+    '18:00',
+    'PIC BEM',
+    '081211113333',
+    true
 )
 ON CONFLICT (id) DO NOTHING;
 
